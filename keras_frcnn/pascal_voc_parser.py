@@ -16,7 +16,6 @@ def get_data(input_path):
 
     print('Parsing annotation files')
     for data_path in data_paths:
-
         annot_path = os.path.join(data_path, 'Annotations')
         imgs_path = os.path.join(data_path, 'JPEGImages')
 
@@ -47,24 +46,6 @@ def get_data(input_path):
             with open(imgsets_path_test) as f:
                 for line in f:
                     test_files.append(line.strip() + '.jpg')
-
-        # try:
-        #     with open(imgsets_path_trainval) as f:
-        #         for line in f:
-        #             trainval_files.append(line.strip() + '.jpg')
-        # except Exception as e:
-        #     print(e)
-        #
-        # try:
-        #     with open(imgsets_path_test) as f:
-        #         for line in f:
-        #             test_files.append(line.strip() + '.jpg')
-        # except Exception as e:
-        #     if data_path[-7:] == 'VOC2012':
-        #         # this is expected, most pascal voc distibutions dont have the test.txt file
-        #         pass
-        #     else:
-        #         print(e)
 
         annots = [os.path.join(annot_path, s) for s in os.listdir(annot_path)]
         idx = 0
@@ -108,13 +89,6 @@ def get_data(input_path):
                         annotation_data['imageset'] = 'test'
                         exist_flag = True
 
-                    # if element_filename in trainval_files:
-                    #     annotation_data['imageset'] = 'trainval'
-                    # elif element_filename in test_files:
-                    #     annotation_data['imageset'] = 'test'
-                    # else:
-                    #     annotation_data['imageset'] = 'trainval'
-
             # annotation file not exist in ImageSet
             if not exist_flag:
                 continue
@@ -147,7 +121,4 @@ def get_data(input_path):
                 print(annotation_data['imageset'])
                 cv2.waitKey(0)
 
-            # except Exception as e:
-            #     print(e)
-            #     continue
     return all_imgs, classes_count, class_mapping

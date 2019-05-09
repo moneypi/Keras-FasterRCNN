@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import numpy as np
 import cv2
 import random
-import copy
 from . import data_augment
 import threading
 import itertools
@@ -61,11 +60,8 @@ class SampleSelector:
         self.curr_class = next(self.class_cycle)
 
     def skip_sample_for_balanced_class(self, img_data):
-
         class_in_img = False
-
         for bbox in img_data['bboxes']:
-
             cls_name = bbox['class']
 
             if cls_name == self.curr_class:
@@ -128,7 +124,6 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
                     continue
 
                 for jy in range(output_height):
-
                     # y-coordinates of the current anchor box
                     y1_anc = downscale * (jy + 0.5) - anchor_y / 2
                     y2_anc = downscale * (jy + 0.5) + anchor_y / 2
@@ -145,7 +140,6 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
                     best_iou_for_loc = 0.0
 
                     for bbox_num in range(num_bboxes):
-
                         # get IOU of the current GT box and the current anchor box
                         curr_iou = iou([gta[bbox_num, 0], gta[bbox_num, 2], gta[bbox_num, 1], gta[bbox_num, 3]],
                                        [x1_anc, y1_anc, x2_anc, y2_anc])
@@ -162,15 +156,16 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
                             th = np.log((gta[bbox_num, 3] - gta[bbox_num, 2]) / (y2_anc - y1_anc))
 
                         if img_data['bboxes'][bbox_num]['class'] != 'bg':
-
-                            # all GT boxes should be mapped to an anchor box, so we keep track of which anchor box was best
+                            # all GT boxes should be mapped to an anchor box,
+                            # so we keep track of which anchor box was best
                             if curr_iou > best_iou_for_bbox[bbox_num]:
                                 best_anchor_for_bbox[bbox_num] = [jy, ix, anchor_ratio_idx, anchor_size_idx]
                                 best_iou_for_bbox[bbox_num] = curr_iou
                                 best_x_for_bbox[bbox_num, :] = [x1_anc, x2_anc, y1_anc, y2_anc]
                                 best_dx_for_bbox[bbox_num, :] = [tx, ty, tw, th]
 
-                            # we set the anchor to positive if the IOU is >0.7 (it does not matter if there was another better box, it just indicates overlap)
+                            # we set the anchor to positive if the IOU is >0.7
+                            # (it does not matter if there was another better box, it just indicates overlap)
                             if curr_iou > C.rpn_max_overlap:
                                 bbox_type = 'pos'
                                 num_anchors_for_bbox[bbox_num] += 1
@@ -289,12 +284,10 @@ def get_anchor_gt(all_img_data, class_count, C, img_length_calc_function, mode='
 
         for img_data in all_img_data:
             try:
-
                 if C.balanced_classes and sample_selector.skip_sample_for_balanced_class(img_data):
                     continue
 
                 # read in image, and optionally add augmentation
-
                 if mode == 'train':
                     img_data_aug, x_img = data_augment.augment(img_data, C, augment=True)
                 else:

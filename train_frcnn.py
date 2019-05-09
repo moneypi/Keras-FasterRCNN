@@ -72,10 +72,10 @@ data_gen_train = data_generators.get_anchor_gt(train_imgs, classes_count, C, nn.
 data_gen_val = data_generators.get_anchor_gt(val_imgs, classes_count, C, nn.get_img_output_length, mode='val')
 data_gen_test = data_generators.get_anchor_gt(test_imgs, classes_count, C, nn.get_img_output_length, mode='val')
 
-input_shape_img = (None, None, 3)
+input_shape_img = (100, 100, 3)
 
 img_input = Input(shape=input_shape_img)
-roi_input = Input(shape=(None, 4))
+roi_input = Input(shape=(300, 4))
 
 shared_layers = nn.nn_base(img_input, trainable=True)
 
@@ -86,7 +86,11 @@ rpn = nn.rpn(shared_layers, num_anchors)
 classifier = nn.classifier(shared_layers, roi_input, C.num_rois, nb_classes=len(classes_count), trainable=True)
 
 model_rpn = Model(img_input, rpn[:2])
+# model_rpn.summary(line_length=130)
+
 model_classifier = Model([img_input, roi_input], classifier)
+model_classifier.summary(line_length=130)
+quit()
 
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)

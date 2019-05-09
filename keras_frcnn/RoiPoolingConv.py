@@ -1,8 +1,6 @@
 from keras.engine.topology import Layer
 import keras.backend as K
-
-if K.backend() == 'tensorflow':
-    import tensorflow as tf
+import tensorflow as tf
 
 
 class RoiPoolingConv(Layer):
@@ -59,9 +57,6 @@ class RoiPoolingConv(Layer):
             col_length = h / float(self.pool_size)
 
             num_pool_regions = self.pool_size
-
-            # NOTE: the RoiPooling implementation differs between theano and tensorflow due to the lack of a resize op
-            # in theano. The theano implementation is much less efficient and leads to long compile times
 
             x = K.cast(x, 'int32')
             y = K.cast(y, 'int32')

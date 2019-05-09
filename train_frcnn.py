@@ -4,13 +4,12 @@ import pprint
 import sys
 import time
 import numpy as np
-from optparse import OptionParser
 import pickle
 import os
 
 import tensorflow as tf
 from keras import backend as K
-from keras.optimizers import Adam, SGD, RMSprop
+from keras.optimizers import Adam
 from keras.layers import Input
 from keras.models import Model
 from keras_frcnn import config, data_generators

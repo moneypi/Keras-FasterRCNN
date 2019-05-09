@@ -7,8 +7,6 @@ import numpy as np
 import pickle
 import os
 
-import tensorflow as tf
-from keras import backend as K
 from keras.optimizers import Adam
 from keras.layers import Input
 from keras.models import Model
@@ -19,17 +17,6 @@ from keras.utils import generic_utils
 from keras.callbacks import TensorBoard
 from keras_frcnn.pascal_voc_parser import get_data
 from keras_frcnn import resnet as nn
-
-
-def write_log(callback, names, logs, batch_no):
-    for name, value in zip(names, logs):
-        summary = tf.Summary()
-        summary_value = summary.value.add()
-        summary_value.simple_value = value
-        summary_value.tag = name
-        callback.writer.add_summary(summary, batch_no)
-        callback.writer.flush()
-
 
 sys.setrecursionlimit(40000)
 
@@ -104,16 +91,9 @@ model_classifier = Model([img_input, roi_input], classifier)
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)
 
-try:
-    # load_weights by name
-    # some keras application model does not containing name
-    # for this kinds of model, we need to re-construct model with naming
-    print('loading weights from {}'.format(C.base_net_weights))
-    model_rpn.load_weights(C.base_net_weights, by_name=True)
-    model_classifier.load_weights(C.base_net_weights, by_name=True)
-except:
-    print('Could not load pretrained model weights. Weights can be found in the keras application folder \
-        https://github.com/fchollet/keras/tree/master/keras/applications')
+print('loading weights from {}'.format(C.base_net_weights))
+model_rpn.load_weights(C.base_net_weights, by_name=True)
+model_classifier.load_weights(C.base_net_weights, by_name=True)
 
 optimizer = Adam(lr=1e-5)
 optimizer_classifier = Adam(lr=1e-5)
@@ -148,7 +128,6 @@ print('Starting training')
 # vis = True
 
 for epoch_num in range(num_epochs):
-
     progbar = generic_utils.Progbar(epoch_length)
     print('Epoch {}/{}'.format(epoch_num + 1, num_epochs))
 
@@ -166,7 +145,6 @@ for epoch_num in range(num_epochs):
         X, Y, img_data = next(data_gen_train)
 
         loss_rpn = model_rpn.train_on_batch(X, Y)
-        write_log(callback, ['rpn_cls_loss', 'rpn_reg_loss'], loss_rpn, train_step)
 
         P_rpn = model_rpn.predict_on_batch(X)
 
@@ -220,7 +198,6 @@ for epoch_num in range(num_epochs):
 
         loss_class = model_classifier.train_on_batch([X, X2[:, sel_samples, :]],
                                                      [Y1[:, sel_samples, :], Y2[:, sel_samples, :]])
-        write_log(callback, ['detection_cls_loss', 'detection_reg_loss', 'detection_acc'], loss_class, train_step)
         train_step += 1
 
         losses[iter_num, 0] = loss_rpn[1]
@@ -261,13 +238,6 @@ for epoch_num in range(num_epochs):
             iter_num = 0
             start_time = time.time()
 
-            write_log(callback,
-                      ['Elapsed_time', 'mean_overlapping_bboxes', 'mean_rpn_cls_loss', 'mean_rpn_reg_loss',
-                       'mean_detection_cls_loss', 'mean_detection_reg_loss', 'mean_detection_acc', 'total_loss'],
-                      [time.time() - start_time, mean_overlapping_bboxes, loss_rpn_cls, loss_rpn_regr,
-                       loss_class_cls, loss_class_regr, class_acc, curr_loss],
-                      epoch_num)
-
             if curr_loss < best_loss:
                 if C.verbose:
                     print('Total loss decreased from {} to {}, saving weights'.format(best_loss, curr_loss))
@@ -275,9 +245,5 @@ for epoch_num in range(num_epochs):
                 model_all.save_weights(C.model_path)
 
             break
-
-        # except Exception as e:
-        #     print('Exception: {}'.format(e))
-        #     continue
 
 print('Training complete, exiting.')
